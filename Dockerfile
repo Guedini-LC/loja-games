@@ -5,8 +5,6 @@ WORKDIR /app
 COPY pom.xml .
 COPY main ./src/main
 
-RUN mkdir -p src && mv main src/main
-
 RUN mvn -DskipTests package
 
 FROM eclipse-temurin:21-jdk
