@@ -282,13 +282,16 @@ public class Main {
                     """);
 
             html.append("<h2>").append(p.getNome()).append("</h2>");
-            html.append("<p><strong>ID:</strong> ").append(p.getId()).append("</p>");
             html.append("<p><strong>Categoria:</strong> ").append(p.getCategoria()).append("</p>");
             html.append("<p class='preco'>R$ ").append(String.format("%.2f", p.getPreco())).append("</p>");
             html.append("<p><strong>Estoque:</strong> ").append(p.getQuantidade()).append(" unidades</p>");
-            html.append("<a href='/vender?id=")
-                    .append(p.getId())
-                    .append("'>Vender 1 unidade</a>");
+            html.append("<form action='/vender' method='post'>");
+            html.append("<input type='hidden' name='id' value='").append(p.getId()).append("'>");
+            html.append("<input type='number' name='quantidade' min='1' max='")
+                    .append(p.getQuantidade())
+                    .append("' placeholder='Quantidade para vender' required>");
+            html.append("<button type='submit'>Vender</button>");
+            html.append("</form>");
             html.append("""
                     </div>
                     """);
@@ -333,34 +336,55 @@ public class Main {
 
     private static void vender(HttpExchange exchange) throws IOException {
         try {
-            String query = exchange.getRequestURI().getQuery();
-            Map<String, String> dados = separar(query);
+            String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+            Map<String, String> dados = separar(body);
 
             int id = Integer.parseInt(dados.get("id"));
+            int quantidade = Integer.parseInt(dados.get("quantidade"));
 
-            loja.venderProduto(id);
+            loja.venderProduto(id, quantidade);
 
             responder(exchange, """
-                    <html>
-                    <head>
-                        <meta charset="UTF-8">
-                        <title>Venda realizada</title>
-                    """ + css() + """
-                    </head>
-                    <body>
-                        <div class="container">
-                            <div class="sucesso">
-                                Venda realizada! Estoque atualizado.
-                            </div>
-                    
-                            <a href="/produtos">Voltar aos produtos</a>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Venda realizada</title>
+                """ + css() + """
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="sucesso">
+                            Venda realizada! Estoque atualizado.
                         </div>
-                    </body>
-                    </html>
-                    """);
+
+                        <a href="/produtos">Voltar aos produtos</a>
+                    </div>
+                </body>
+                </html>
+                """);
 
         } catch (Exception e) {
-            responder(exchange, "<h1>Erro ao vender produto</h1><p>" + e.getMessage() + "</p>");
+            String htmlErro = """
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Erro na venda</title>
+                """ + css() + """
+                </head>
+                <body>
+                    <div class="container">
+                        <h1>Erro ao vender produto</h1>
+                        <p>
+                """ + e.getMessage() + """
+                        </p>
+
+                        <a href="/produtos">Voltar aos produtos</a>
+                    </div>
+                </body>
+                </html>
+                """;
+
+            responder(exchange, htmlErro);
         }
     }
 }

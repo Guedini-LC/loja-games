@@ -35,9 +35,16 @@ public class Produto {
         return quantidade;
     }
 
-    public void diminuirEstoque() {
-        if (quantidade > 0) {
-            quantidade--;
+    public void diminuirEstoque(int quantidadeVendida) {
+
+        if (quantidadeVendida <= 0) {
+            throw new IllegalArgumentException("A quantidade vendida deve ser maior que zero.");
         }
+
+        if (quantidadeVendida > quantidade) {
+            throw new IllegalArgumentException("Quantidade vendida maior que o estoque disponível.");
+        }
+
+        quantidade -= quantidadeVendida;
     }
 }
